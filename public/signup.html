@@ -3,16 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <title>Signup</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="stylegpt.css"> 
+  
 </head>
-<body>
+<body class="signup-page">
   <div class="container">
     <h1>Signup</h1>
-    <form action="signup" method="post">
+    <form  method="post">
       <input type="email" name="email" placeholder="Email" required="required" />
-      <input type="password" name="password" placeholder="Password" required="required" />
+      
+
+      <div class="password-wrapper">
+        <input type="password" name="password" id="password" placeholder="Password" required>
+        <button type="button" id="toggle-password">👁</button>
+      </div>
+      
+      <div id="password-strength">
+        <div id="strength-fill"></div>
+      </div>
+
+      <div class="password-wrapper">
+        <input type="password" id="confirm-password" placeholder="Conferma password" required>
+        <button type="button" id="toggle-ConfPassword">👁</button>
+      </div>
+
+
+      
+
+
+      <div id="error-message" style="color: red; margin-bottom: 10px;"></div>
+      <p id="loading-msg" style="display: none; color: #555;">Attendere... registrazione in corso</p>
+
+
       <button type="submit">Registrati</button>
     </form>
+
+
     <p>Sei già registrato? <a href="login">Accedi</a></p>
   </div>
+
+  <script src="signup.js"> </script>
+  </body>
 </html>

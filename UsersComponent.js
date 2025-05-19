@@ -1,64 +1,119 @@
 const fs = require("fs")
 const bcrypt = require("bcrypt")
-
+const { sendVerificationEmail, reset } = require("./sendVerification")
+const { generaTokenEmail, verificaTokenEmail } = require("./jwtUtils")
 
 class UsersComponent {
   constructor(statePath) {
-    this.users = []
+    this.users = {}
     this.statePath = statePath
 
     try {
       const data = fs.readFileSync(statePath, "utf-8")
       this.users = JSON.parse(data)
 
-      if (!Array.isArray(this.users)) {
-        console.warn("Il file JSON non contiene un array. Rendo vuoto.")
-        this.users = []
+      if (typeof this.users !== "object" || Array.isArray(this.users)) {
+        console.warn("Il file JSON non contiene un oggetto valido. Resetto.")
+        this.users = {}
       }
     } catch (err) {
       console.log("Errore nel caricamento di state.json:", err.message)
-      this.users = [] 
+      this.users = {}
     }
   }
-
 
   serialize() {
     fs.writeFileSync(this.statePath, JSON.stringify(this.users, null, 2))
   }
 
-  create(data) {
+  async create(data) {
     const { email, password } = data
 
-    const hashedPassword = bcrypt.hashSync(password, 10)
-    const verificationToken = crypto.randomBytes(32).toString("hex")
-
-    if (this.users.some(user => user.email === email)) {
+    if (this.exists(email)) {
       throw new Error("L'utente esiste già")
     }
 
-    this.users.push({email: email, password: hashedPassword, verify: false, verificationToken})
-    this.serialize()
+    const hashedPassword = bcrypt.hashSync(password, 10)
 
-    this.sendVerificationEmail(email, verificationToken)
-  
-  }
-
-  sendVerificationEmail(email, token) {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "progettobello@gmail.com", // Inserisci la tua email
-        pass: "tua-password-app" // Usa una password per app (non la password normale)
+    // struttura JSON pulita con verify come oggetto
+    this.users[email] = {
+      password: hashedPassword,
+      verify: {
+        verified: false,
+        lastEmailSent: 0
       }
-    })
+    }
+
+    const jwtToken = generaTokenEmail(email)
+
+    try {
+      await sendVerificationEmail(email, jwtToken)
+      console.log(`Email di verifica inviata a ${email}`)
+      this.serialize()
+    } catch (err) {
+      console.error("Errore nell'invio dell'email:", err)
+      delete this.users[email]
+      throw new Error("Errore nell'invio dell'email di verifica.")
+    }
   }
 
   login(email, password) {
-    const user = this.users.find(user => user.email === email)
+    const user = this.users[email]
+    if (!user) return false
 
+    if (!user.verify?.verified) {
+      console.log(`Utente ${email} non verificato`)
+      return false
+    }
 
-    return user && bcrypt.compareSync(password, user.password)
+    return bcrypt.compareSync(password, user.password)
   }
+
+  exists(email){
+    const user = this.users[email]
+    return !!user
+  }
+
+
+  //reset password
+  async resetPassword(email){
+    const user = this.users[email]
+
+    if (!user) {
+    throw new Error("Utente non trovato")
+    }
+    if (!user.verify) {
+      throw new Error("Account non verificato")
+    }
+
+    const resetToken = generaTokenEmail(email)
+    try {
+          await reset(email, resetToken)
+          console.log(`Email di recupero password inviata a ${email}`)
+    } catch (err) {
+          console.error("Errore nell'invio dell'email:", err)
+          throw new Error("Errore nell'invio dell'email di recupero.")
+        }
+
+    }
+  
+    changePassword(token, newPassword) {
+      let email
+      try {
+        const decoded = verificaTokenEmail(token)
+        email = decoded.email
+      } catch (err) {
+        throw new Error("Token non valido o scaduto")
+      }
+
+      const user = this.users[email]
+      if (!user) {
+        throw new Error("Utente non trovato")
+      }
+
+      user.password = bcrypt.hashSync(newPassword, 10)
+      this.serialize()
+    }
 }
 
 module.exports = UsersComponent

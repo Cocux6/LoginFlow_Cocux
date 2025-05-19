@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Verifica completata</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/stylegpt.css">
+</head>
+<body class="verify-page">
+  <div class="container">
+    <h1>Verifica completata</h1>
+    <p>Il tuo account è stato verificato con successo.</p>
+    <p><a href="/login">Vai al login</a></p>
+    <p>Verrai reindirizzato alla pagina di login tra pochi secondi...</p>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = "/login"
+    }, 3000)
+  </script>
+</body>
+</html>

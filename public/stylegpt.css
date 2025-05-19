@@ -1,0 +1,254 @@
+/* Stile generale */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(120deg, #e0f7fa, #e0f2f1);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenitore centrale */
+.container {
+  background-color: #fff;
+  padding: 36px 40px;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
+}
+
+/* Titolo */
+.container h1 {
+  text-align: center;
+  margin-bottom: 28px;
+  font-size: 1.9em;
+  color: #222;
+}
+
+/* Input */
+input[type="email"],
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+/* Wrapper per password + bottone 👁 */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.password-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+  margin: 0;
+}
+
+.password-wrapper button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: #555;
+  height: 100%;
+}
+
+/* Messaggio di errore */
+#error-message {
+  color: #e53935;
+  font-size: 0.92em;
+  margin-bottom: 10px;
+  min-height: 1em;
+}
+
+/* Pulsante submit */
+button[type="submit"] {
+  width: 100%;
+  padding: 14px;
+  background-color: #009688;
+  color: white;
+  font-size: 1em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 6px;
+}
+
+button[type="submit"]:hover {
+  background-color: #00796b;
+}
+
+/* Testo e link */
+.container p {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.container a {
+  color: #009688;
+  text-decoration: none;
+}
+
+.container a:hover {
+  text-decoration: underline;
+}
+
+#password-strength {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+#strength-fill {
+  height: 100%;
+  width: 0%;
+  background-color: red;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+
+
+/*login.html*/
+.login-page #password-strength,
+.login-page #strength-fill,
+.login-page #strength-text {
+  display: none;
+}
+
+.login-page .password-wrapper {
+  margin-bottom: 12px;
+}
+
+/* verify.html*/
+.verify-page .container {
+  text-align: center;
+  padding: 32px 40px;
+}
+
+.verify-page h1 {
+  font-size: 1.6em;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.verify-page p {
+  font-size: 1em;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.verify-page strong {
+  color: #d32f2f;
+}
+
+.verify-page a {
+  color: #009688;
+  text-decoration: none;
+}
+
+.verify-page a:hover {
+  text-decoration: underline;
+}
+
+
+/*resend.html*/
+/* RESEND PAGE */
+.resend-page .container {
+  text-align: center;
+  padding: 32px 40px;
+}
+
+.resend-page h1 {
+  font-size: 1.6em;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.resend-page p {
+  font-size: 1em;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.resend-page input[type="email"] {
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+
+.resend-page button[type="submit"] {
+  width: 100%;
+  padding: 14px;
+  background-color: #009688;
+  color: white;
+  font-size: 1em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.resend-page button[type="submit"]:hover {
+  background-color: #00796b;
+}
+
+.resend-page #message {
+  font-size: 0.95em;
+  margin-top: 16px;
+}
+
+
+/*success*/
+/* VERIFICA COMPLETATA PAGE */
+.verify-page .container {
+  text-align: center;
+  padding: 32px 40px;
+}
+
+.verify-page h1 {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  color: #2e7d32; /* verde ✓ */
+}
+
+.verify-page p {
+  font-size: 1em;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: #444;
+}
+
+.verify-page a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #009688;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.verify-page a:hover {
+  text-decoration: underline;
+}
