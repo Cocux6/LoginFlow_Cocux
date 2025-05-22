@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS users  (
+    email VARCHAR(255) PRIMARY KEY,
+    password VARCHAR(255) NOT NULL,
+    verified BOOLEAN NOT NULL DEFAULT FALSE
+    last_email_sent TIMESTAMP NULL
+);

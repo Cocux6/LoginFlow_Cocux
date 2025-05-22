@@ -4,13 +4,15 @@ const express = require("express")
 const path = require("path")
 const session = require("express-session")
 
-const UsersComponent = require("./UsersComponent")
-const { verify, resend } = require("./sendVerification")
+const { create, login, changePassword} = require("./UsersComponent")
+const { verify, resend, reset } = require("./emailManager")
+const { getUserByEmail, exists } = require("./queryFunction")
+
+const db = require("./db")
 
 const app = new express()
 const PORT = 8080
 
-const usersComponent = new UsersComponent("./state.json")
 
 app.use(session({
   secret: process.env.SESSIONKEY,
@@ -31,9 +33,11 @@ app.get(["/" ,"/login"], (req, res) => {
 
 
 
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body
-  if (usersComponent.login(email, password)) {
+  const user = await getUserByEmail(email)
+
+  if (await login(user, password)) {
     req.session.user = email
     res.json({ success: true })
   } else {
@@ -48,9 +52,10 @@ app.get("/recover", (req, res) => {
 
 app.post("/recover", async (req, res) => {
   const { email } = req.body
+  const user = await getUserByEmail(email)
 
   try {
-    await usersComponent.resetPassword(email)
+    await reset(user)
     res.json({ message: "Email inviata correttamente" })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -62,10 +67,10 @@ app.get("/reset", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/reset.html"))
 })
 
-app.post("/reset", (req, res) => {
+app.post("/reset", async (req, res) => {
   const { token, newPassword } = req.body
   try {
-    usersComponent.changePassword( token, newPassword)
+    await changePassword( token, newPassword)
     res.json({ message: "Password aggiornata con successo, ti stiamo reindirizzando al login" })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -81,18 +86,18 @@ app.get("/signup", (req, res) => {
 
 
 app.post("/signup", async (req, res) => {
-  const { email, password } = req.body
-
-  if (usersComponent.exists(email)) {
-    return res.status(400).json({ error: "Account già esistente" })
-  }
+  const { email, password } = req.body;
 
   try {
-    await usersComponent.create({ email, password })
-    res.json({ success: true })
+    if (await exists(email)) {
+      return res.status(400).json({ error: "Account già esistente" });
+    }
+
+    await create({ email, password });
+    res.json({ success: true });
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: "Errore durante la registrazione" })
+    console.error(err);
+    res.status(500).json({ error: "Errore durante la registrazione" });
   }
 })
 
@@ -130,12 +135,12 @@ app.get("/verify", (req, res) => {
 
 
 app.get("/api/verify", (req, res) => {
-  verify(req, res, usersComponent)
+  verify(req, res)
 })
 
 
 app.post("/api/resend", requireLogin, async (req, res) => {
-  resend(req, res, usersComponent)
+  await resend(req, res)
 })
 
 
@@ -145,6 +150,11 @@ app.use((req, res) => {
 })
 
 
+async function main() {
+  await db.waitForDatabase()
+  await db.createUsersTableIfNotExists()
 
+  app.listen(PORT, () => console.log(`server listening on port ${PORT}: http://localhost:8080/`))
+}
 
-app.listen(PORT, () => console.log(`server listening on port ${PORT}: http://localhost:8080/`))
+main()

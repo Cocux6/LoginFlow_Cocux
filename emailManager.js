@@ -2,8 +2,12 @@ require("dotenv").config()
 const nodemailer = require("nodemailer")
 const path = require("path")
 const { generaTokenEmail, verificaTokenEmail } = require("./jwtUtils")
+const { getUserByEmail, setVerified, setNewSentTime } = require("./queryFunction")
 
-async function sendVerificationEmail(email, token) {
+async function sendVerificationEmail(email) {
+
+  const token = generaTokenEmail(email)
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -36,7 +40,7 @@ async function sendVerificationEmail(email, token) {
 }
 
 //VERIFICA MAIL
-function verify(req, res, usersComponent) {
+function verify(req, res) {
   const { token } = req.query
 
   if (!token)
@@ -48,13 +52,12 @@ function verify(req, res, usersComponent) {
     return res.send(`<h1>Token non valido</h1><p>${error}</p>`)
   }
 
-  const user = usersComponent.users[email]
+  const user = getUserByEmail(email)
 
   if (!user) return res.send("<h1>Utente non trovato</h1>")
-  if (user.verify.verified) return res.send("<h1>Account già verificato</h1>")
+  if (user.verified) return res.send("<h1>Account già verificato</h1>")
 
-  user.verify.verified = true
-  usersComponent.serialize()
+  setVerified(email)
 
   const verifySuccessPath = path.resolve(__dirname, "public", "verifySuccess.html")
   res.sendFile(verifySuccessPath)
@@ -62,23 +65,23 @@ function verify(req, res, usersComponent) {
 
 
 //RESEND
-async function resend(req, res, usersComponent) {
+async function resend(req, res) {
   const { email } = req.body
   console.log("Email ricevuta per il resend:", email)
 
-  const user = usersComponent.users[email]
+  const user = getUserByEmail(email)
 
   if (!user) {
     return res.status(400).json({ error: "Utente non trovato" })
   }
 
-  if (user.verify.verified) {
+  if (user.verified) {
     return res.status(400).json({ error: "Account già verificato" })
   }
 
   const now = Date.now()
   const cooldown = 60 * 1000
-  const lastSent = user.verify.lastEmailSent
+  let lastSent = user.last_email_sent
   if (now - lastSent < cooldown) {
     const secondsLeft = Math.ceil((cooldown - (now - lastSent)) / 1000)
     return res.status(429).json({
@@ -86,12 +89,10 @@ async function resend(req, res, usersComponent) {
     })
   }
 
-  const token = generaTokenEmail(email)
-
   try {
-    await sendVerificationEmail(email, token)
-    user.verify.lastEmailSent = now
-    usersComponent.serialize()
+    await sendVerificationEmail(email)
+    
+    setNewSentTime(email, Date.now())
     res.json({ message: "Nuovo link di verifica inviato alla tua email" })
   } catch (err) {
     console.error("Errore nell'invio dell'email:", err)
@@ -99,7 +100,12 @@ async function resend(req, res, usersComponent) {
   }
 }
 
-async function reset(email, token){
+async function reset(user){
+
+  if (!user.verified) throw new Error("Account non verificato")
+
+  const email = user.email
+  const token = generaTokenEmail(email)
   const url = `http://localhost:8080/reset?token=${token}`
 
   const transporter = nodemailer.createTransport({
