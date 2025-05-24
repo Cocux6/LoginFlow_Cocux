@@ -12,18 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const strengthBar = document.getElementById("strength-fill")
   const loadingMsg = document.getElementById("loading-msg")
 
-  // Mostra/nasconde la password
+  // Mostra o nasconde la password
   togglePsw.addEventListener("click", () => {
     const isPassword = passwordInput.type === "password"
     passwordInput.type = isPassword ? "text" : "password"
   })
 
-   toggleConfPsw.addEventListener("click", () => {
+  // Mostra o nasconde la conferma password
+  toggleConfPsw.addEventListener("click", () => {
     const isConfPassword = confirmInput.type === "password"
     confirmInput.type = isConfPassword ? "text" : "password"
   })
 
-  // Gestione submit del form
+  // Gestione dell'invio del form di registrazione
   form.addEventListener("submit", async (e) => {
     e.preventDefault()
 
@@ -34,20 +35,22 @@ document.addEventListener("DOMContentLoaded", () => {
     errorMsg.textContent = ""
     loadingMsg.style.display = "block"
 
-    // Validazione password
-    const pswCheck = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    // Verifica che la password sia sufficientemente sicura
+    const pswCheck = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password) // Contiene carattere speciale
     if (!pswCheck) {
       errorMsg.textContent = "La password deve avere almeno 8 caratteri e contenere un simbolo speciale."
       loadingMsg.style.display = "none"
       return
     }
 
+    // Verifica che la password e la conferma coincidano
     if (password !== confirm) {
       errorMsg.textContent = "Le password non coincidono."
       loadingMsg.style.display = "none"
       return
     }
 
+    // Invio dei dati al server
     try {
       const res = await fetch("/signup", {
         method: "POST",
@@ -58,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        window.location.href = "/verify.html"
+        window.location.href = "/verify.html" // Reindirizza dopo registrazione riuscita
       } else {
         errorMsg.textContent = data.error || "Registrazione fallita"
         loadingMsg.style.display = "none"
@@ -70,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
-  // Barra di forza della password
+  // Aggiorna la barra di forza della password mentre l’utente digita
   passwordInput.addEventListener("input", () => {
     const password = passwordInput.value
     const strength = calculateStrength(password)
@@ -80,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     strengthBar.style.backgroundColor = strength.color
   })
 
+  // Funzione che calcola la forza della password
   function calculateStrength(password) {
     let score = 0
     if (password.length >= 8) score++

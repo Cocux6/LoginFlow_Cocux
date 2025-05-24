@@ -1,48 +1,56 @@
-const bcrypt = require("bcrypt");
-const { pool } = require("./db");
-const { generaTokenEmail, verificaTokenEmail } = require("./jwtUtils");
-const { sendVerificationEmail } = require("./emailManager");
+const bcrypt = require("bcrypt")
+const { pool } = require("./db")
+const { verificaTokenEmail } = require("./jwtUtils")
+const { sendVerificationEmail } = require("./emailManager")
 
-
-  //CREATE
+// Funzione per creare un nuovo utente
 async function create({ email, password }) {
-    const hashedPassword = bcrypt.hashSync(password, 10);
+  // Hasher della password con salt di 10 cicli
+  const hashedPassword = bcrypt.hashSync(password, 10)
 
-    await pool.query(
-      "INSERT INTO users (email, password, verified, last_email_sent) VALUES (?, ?, false, NULL)",
-      [email, hashedPassword]
-    );
+  // Inserimento dell’utente nel database (non ancora verificato)
+  await pool.query(
+    "INSERT INTO users (email, password, verified, last_email_sent) VALUES (?, ?, false, NULL)",
+    [email, hashedPassword]
+  )
 
-    await sendVerificationEmail(email);
-    console.log(`Email di verifica inviata a ${email}`);
+  // Invio dell’email di verifica all’indirizzo fornito
+  await sendVerificationEmail(email)
+  console.log(`Email di verifica inviata a ${email}`)
+}
+
+// Funzione di login: verifica credenziali e stato dell'account
+async function login(user, password) {
+
+  // Controllo se l’utente esiste
+  if (!user)
+    return false
+
+  // Controllo se l’utente ha verificato l’email
+  if (!user.verified) {
+    console.log("Account non verificato")
+    return false
   }
 
-  //LOGIN
-  async function login(user, password) {
+  // Verifica della password con hash bcrypt
+  return bcrypt.compareSync(password, user.password) 
+}
 
-    if(!user)
-      return false
+// Cambio password tramite token ricevuto via email
+async function changePassword(token, newPassword) {
+  // Decodifica e verifica del token
+  const { valid, email, error } = verificaTokenEmail(token)
 
-    if (!user.verified) {
-      console.log("Account non verificato");
-      return false;
-    }
+  if (!valid) throw new Error("Token non valido o scaduto")
 
-    return bcrypt.compareSync(password, user.password);
-  }
+  // Hash della nuova password
+  const hashedPassword = bcrypt.hashSync(newPassword, 10)
 
+  // Aggiornamento della password nel database
+  await pool.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email])
+}
 
-  //CHANGE
-  async function changePassword(token, newPassword) {
-    const { valid, email, error } = verificaTokenEmail(token);
-    if (!valid) throw new Error("Token non valido o scaduto");
-
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    await pool.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email]);
-  }
-
-
-
+// Esporto le funzioni per l’uso nel server
 module.exports = {
   create,
   login,
