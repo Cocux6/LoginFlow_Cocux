@@ -33,9 +33,9 @@ Questo progetto è un'applicazione web completa per la gestione sicura degli ute
    ├─ reset.html
    ├─ verify.html
    ├─ hub.html
-   ├─ style.css
+   ├─ stylegpt.css
    └─ *.js (client-side)
-📁 mysql-init/
+📁 mysql/
    └─ init.sql
 📄 db.js
 📄 emailManager.js
@@ -43,6 +43,7 @@ Questo progetto è un'applicazione web completa per la gestione sicura degli ute
 📄 queryFunction.js
 📄 jwtUtils.js
 📄 index.js
+📄 server.js
 📄 Dockerfile
 📄 docker-compose.yml
 📄 .env
@@ -56,8 +57,8 @@ Questo progetto è un'applicazione web completa per la gestione sicura degli ute
 1. Clona il repository:
 
 ```bash
-git clone https://github.com/tuonome/sistema-login.git
-cd sistema-login
+git clone https://github.com/Cocux6/LoginFlow_Cocux.git
+cd LoginFlow_Cocux
 ```
 
 2. Installa le dipendenze:
