@@ -1,119 +1,58 @@
-const fs = require("fs")
 const bcrypt = require("bcrypt")
-const { sendVerificationEmail, reset } = require("./sendVerification")
-const { generaTokenEmail, verificaTokenEmail } = require("./jwtUtils")
+const { pool } = require("./db")
+const { verificaTokenEmail } = require("./jwtUtils")
+const { sendVerificationEmail } = require("./emailManager")
 
-class UsersComponent {
-  constructor(statePath) {
-    this.users = {}
-    this.statePath = statePath
+// Funzione per creare un nuovo utente
+async function create({ email, password }) {
+  // Hasher della password con salt di 10 cicli
+  const hashedPassword = bcrypt.hashSync(password, 10)
 
-    try {
-      const data = fs.readFileSync(statePath, "utf-8")
-      this.users = JSON.parse(data)
+  // Inserimento dell’utente nel database (non ancora verificato)
+  await pool.query(
+    "INSERT INTO users (email, password, verified, last_email_sent) VALUES (?, ?, false, NULL)",
+    [email, hashedPassword]
+  )
 
-      if (typeof this.users !== "object" || Array.isArray(this.users)) {
-        console.warn("Il file JSON non contiene un oggetto valido. Resetto.")
-        this.users = {}
-      }
-    } catch (err) {
-      console.log("Errore nel caricamento di state.json:", err.message)
-      this.users = {}
-    }
-  }
-
-  serialize() {
-    fs.writeFileSync(this.statePath, JSON.stringify(this.users, null, 2))
-  }
-
-  async create(data) {
-    const { email, password } = data
-
-    if (this.exists(email)) {
-      throw new Error("L'utente esiste già")
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 10)
-
-    // struttura JSON pulita con verify come oggetto
-    this.users[email] = {
-      password: hashedPassword,
-      verify: {
-        verified: false,
-        lastEmailSent: 0
-      }
-    }
-
-    const jwtToken = generaTokenEmail(email)
-
-    try {
-      await sendVerificationEmail(email, jwtToken)
-      console.log(`Email di verifica inviata a ${email}`)
-      this.serialize()
-    } catch (err) {
-      console.error("Errore nell'invio dell'email:", err)
-      delete this.users[email]
-      throw new Error("Errore nell'invio dell'email di verifica.")
-    }
-  }
-
-  login(email, password) {
-    const user = this.users[email]
-    if (!user) return false
-
-    if (!user.verify?.verified) {
-      console.log(`Utente ${email} non verificato`)
-      return false
-    }
-
-    return bcrypt.compareSync(password, user.password)
-  }
-
-  exists(email){
-    const user = this.users[email]
-    return !!user
-  }
-
-
-  //reset password
-  async resetPassword(email){
-    const user = this.users[email]
-
-    if (!user) {
-    throw new Error("Utente non trovato")
-    }
-    if (!user.verify) {
-      throw new Error("Account non verificato")
-    }
-
-    const resetToken = generaTokenEmail(email)
-    try {
-          await reset(email, resetToken)
-          console.log(`Email di recupero password inviata a ${email}`)
-    } catch (err) {
-          console.error("Errore nell'invio dell'email:", err)
-          throw new Error("Errore nell'invio dell'email di recupero.")
-        }
-
-    }
-  
-    changePassword(token, newPassword) {
-      let email
-      try {
-        const decoded = verificaTokenEmail(token)
-        email = decoded.email
-      } catch (err) {
-        throw new Error("Token non valido o scaduto")
-      }
-
-      const user = this.users[email]
-      if (!user) {
-        throw new Error("Utente non trovato")
-      }
-
-      user.password = bcrypt.hashSync(newPassword, 10)
-      this.serialize()
-    }
+  // Invio dell’email di verifica all’indirizzo fornito
+  await sendVerificationEmail(email)
+  console.log(`Email di verifica inviata a ${email}`)
 }
 
-module.exports = UsersComponent
+// Funzione di login: verifica credenziali e stato dell'account
+async function login(user, password) {
+
+  // Controllo se l’utente esiste
+  if (!user)
+    return false
+
+  // Controllo se l’utente ha verificato l’email
+  if (!user.verified) {
+    console.log("Account non verificato")
+    return false
+  }
+
+  // Verifica della password con hash bcrypt
+  return bcrypt.compareSync(password, user.password) 
+}
+
+// Cambio password tramite token ricevuto via email
+async function changePassword(token, newPassword) {
+  // Decodifica e verifica del token
+  const { valid, email, error } = verificaTokenEmail(token)
+
+  if (!valid) throw new Error("Token non valido o scaduto")
+
+  // Hash della nuova password
+  const hashedPassword = bcrypt.hashSync(newPassword, 10)
+
+  // Aggiornamento della password nel database
+  await pool.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email])
+}
+
+// Esporto le funzioni per l’uso nel server
+module.exports = {
+  create,
+  login,
+  changePassword
+}

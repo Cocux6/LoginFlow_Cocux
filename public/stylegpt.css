@@ -170,55 +170,7 @@ button[type="submit"]:hover {
 }
 
 
-/*resend.html*/
-/* RESEND PAGE */
-.resend-page .container {
-  text-align: center;
-  padding: 32px 40px;
-}
 
-.resend-page h1 {
-  font-size: 1.6em;
-  margin-bottom: 20px;
-  color: #222;
-}
-
-.resend-page p {
-  font-size: 1em;
-  line-height: 1.6;
-  margin-bottom: 16px;
-}
-
-.resend-page input[type="email"] {
-  width: 100%;
-  padding: 14px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
-  box-sizing: border-box;
-  margin-bottom: 14px;
-}
-
-.resend-page button[type="submit"] {
-  width: 100%;
-  padding: 14px;
-  background-color: #009688;
-  color: white;
-  font-size: 1em;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.resend-page button[type="submit"]:hover {
-  background-color: #00796b;
-}
-
-.resend-page #message {
-  font-size: 0.95em;
-  margin-top: 16px;
-}
 
 
 /*success*/

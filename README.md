@@ -1,111 +1,144 @@
-# 🔐 Sistema di Autenticazione Web (Node.js)
+# 🔐 Sistema di Autenticazione Web (Node.js + MySQL + Docker)
 
-Questo progetto è un'applicazione web semplice e completa per la gestione degli utenti, che include:
+Questo progetto è un'applicazione web completa per la gestione sicura degli utenti, con funzionalità moderne:
 
 - Registrazione con verifica email
-- Login solo per utenti verificati
-- Recupero password via email (con token temporanei)
-- Reset della password protetto con token JWT
-- Sessioni utente (login/logout)
-- Salvataggio persistente degli utenti in file JSON
+- Login consentito solo dopo la verifica
+- Recupero password via email (con token JWT)
+- Reset protetto della password
+- Sessioni persistenti con Express-session
+- Salvataggio utenti in MySQL (via Docker)
 
 ---
 
 ## 🚀 Tecnologie utilizzate
 
 - Node.js + Express
-- Nodemailer (per l'invio email)
-- bcrypt (per hashing password)
-- JWT (per token di reset)
-- HTML + CSS vanilla
-- File system JSON locale (senza database)
+- MySQL 8.0 (con Docker)
+- Nodemailer (per invio email)
+- bcrypt (per hashing sicuro delle password)
+- JWT (per token di verifica/reset)
+- HTML + CSS + JS client-side
+- phpMyAdmin (per visualizzazione DB)
 
 ---
 
 ## 📂 Struttura del progetto
 
-\`\`\`
+```
 📁 public/
    ├─ login.html
    ├─ signup.html
    ├─ recover.html
    ├─ reset.html
+   ├─ verify.html
    ├─ hub.html
    ├─ stylegpt.css
-   └─ *.js (JS client-side)
-📁 utils/
-   └─ jwtUtils.js
-📁 src/
-   └─ UsersComponent.js
+   └─ *.js (client-side)
+📁 mysql/
+   └─ init.sql
+📄 db.js
+📄 emailManager.js
+📄 UsersComponent.js
+📄 queryFunction.js
+📄 jwtUtils.js
+📄 index.js
 📄 server.js
-📄 state.json
+📄 Dockerfile
+📄 docker-compose.yml
 📄 .env
 📄 README.md
-\`\`\`
+```
 
 ---
 
-## ⚙️ Setup del progetto
+## ⚙️ Setup locale (senza Docker)
 
 1. Clona il repository:
 
-\`\`\`bash
-git clone https://github.com/tuonome/sistema-login.git
-cd sistema-login
-\`\`\`
+```bash
+git clone https://github.com/Cocux6/LoginFlow_Cocux.git
+cd LoginFlow_Cocux
+```
 
 2. Installa le dipendenze:
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
-3. Crea un file \`.env\` con le seguenti variabili:
+3. Crea un file `.env` con le seguenti variabili:
 
-\`\`\`env
-EMAIL_USER=tuobot@gmail.com
-EMAIL_PASSWORD=la-tua-app-password
-JWT_SECRET=una-stringa-a-caso
-\`\`\`
+```env
+EMAIL_USER=tuoemail@gmail.com
+EMAIL_PASSWORD=la-tua-password-app
+SESSIONKEY=chiave-sessione
+JWT=chiave-per-jwt
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=tuapasswordmysql
+DB_NAME=logindb
+```
 
-> Se usi Gmail, attiva le App Password nel tuo account Google.
+> ⚠️ Se usi Gmail, abilita le App Password nel tuo account.
 
-4. Avvia il server:
+4. Avvia MySQL separatamente, assicurati che il DB esista, poi avvia il server:
 
-\`\`\`bash
-node server.js
-\`\`\`
+```bash
+node index.js
+```
 
 5. Vai su [http://localhost:8080](http://localhost:8080)
 
 ---
 
+## 🐳 Setup con Docker (consigliato)
+
+1. Crea un file `.env` con le variabili seguenti:
+
+```env
+DB_NAME=logindb
+DB_USER=loginuser
+DB_PASSWORD=loginpass
+DB_ROOT_PASSWORD=rootpass
+DB_HOST=mysql
+SESSIONKEY=chiave-sessione
+EMAIL_USER=tuoemail@gmail.com
+EMAIL_PASSWORD=la-tua-password-app
+JWT=chiave-per-jwt
+```
+
+2. Avvia tutto con Docker:
+
+```bash
+docker-compose up --build
+```
+
+3. Vai su:
+- App: [http://localhost:8080](http://localhost:8080)
+- PhpMyAdmin: [http://localhost:8081](http://localhost:8081)  
+  (Server: `mysql`, User: `loginuser`, Password: `loginpass`)
+
+---
+
 ## ✉️ Funzionalità email
 
-- Viene inviata un'email di verifica al momento della registrazione.
-- I link di reset password scadono dopo 15 minuti.
-- Tutte le email sono inviate tramite Nodemailer (SMTP Gmail).
+- L'email di verifica viene inviata alla registrazione
+- I token per il reset scadono dopo 15 minuti
+- Le email vengono inviate tramite SMTP Gmail (via Nodemailer)
 
 ---
 
 ## 🔐 Sicurezza
 
-- Le password sono salvate solo come hash bcrypt.
-- I token di reset sono JWT firmati e con scadenza.
-- L’utente può fare login solo dopo la verifica dell’account.
-
----
-
-## 📌 To-do / Miglioramenti futuri
-
-- Passaggio a database (es. MongoDB o SQLite)
-- Rate limiting per evitare spam su /recover
-- Pannello admin per gestione utenti
-- Test automatici e copertura unitaria
+- Password salvate come hash con bcrypt
+- Token JWT con firma e scadenza
+- Login possibile solo dopo verifica dell’account
+- Protezione contro invii ripetuti (rate limit base)
 
 ---
 
 ## 📄 Licenza
 
-Questo progetto è open-source e libero per uso personale, didattico o commerciale.  
-Puoi adattarlo e ridistribuirlo come preferisci. Una ⭐ al repo è sempre gradita!
+Questo progetto è open-source, gratuito per scopi educativi, personali o commerciali.  
+Modificalo liberamente.
